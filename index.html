@@ -66,6 +66,27 @@
               <option value="52">52 mm (maksimal, margin tipis)</option>
             </select>
           </div>
+          <div class="field-group">
+            <label for="setPrintOffset">Kalibrasi Posisi Cetak (Kiri/Kanan)</label>
+            <select id="setPrintOffset">
+              <option value="-3">Geser ke kiri 3mm</option>
+              <option value="-2">Geser ke kiri 2mm</option>
+              <option value="-1">Geser ke kiri 1mm</option>
+              <option value="0" selected>Tengah (default)</option>
+              <option value="1">Geser ke kanan 1mm</option>
+              <option value="2">Geser ke kanan 2mm</option>
+              <option value="3">Geser ke kanan 3mm</option>
+            </select>
+            <p class="hint">Jika hasil cetak masih mepet ke salah satu sisi, coba ubah kalibrasi ini lalu cetak ulang.</p>
+          </div>
+          <div class="field-group">
+            <label for="setOrientation">Orientasi Cetak</label>
+            <select id="setOrientation">
+              <option value="portrait" selected>Portrait (standar, untuk hampir semua printer thermal)</option>
+              <option value="landscape">Landscape (khusus, hanya jika driver/printer Anda mengharuskannya)</option>
+            </select>
+            <p class="hint">Biarkan pada Portrait kecuali dialog cetak printer Anda memaksa orientasi Landscape agar tidak terpotong.</p>
+          </div>
           <p class="hint">Pengaturan ini disimpan otomatis di perangkat ini (localStorage) dan dipakai untuk semua dokumen.</p>
         </div>
       </details>
@@ -230,6 +251,7 @@
 
         <div class="form-actions">
           <button type="button" id="btnPrint" class="btn-primary">🖨️ Cetak</button>
+          <button type="button" id="btnShareWA" class="btn-secondary">💬 Bagikan ke WhatsApp</button>
           <button type="button" id="btnSaveDraft" class="btn-secondary">💾 Simpan Draft</button>
           <button type="button" id="btnLoadDraft" class="btn-secondary">📂 Muat Draft</button>
           <button type="button" id="btnClear" class="btn-danger">🗑️ Bersihkan</button>

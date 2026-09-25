@@ -144,15 +144,25 @@ let itemRowSeq = 1;
    4. SETTINGS (localStorage)
    --------------------------------------------------------- */
 
+const DEFAULT_SETTINGS = {
+  businessName: '',
+  businessAddress: '',
+  businessPhone: '',
+  footerNote: '',
+  contentWidth: '50',
+  printOffset: '0',
+  orientation: 'portrait'
+};
+
 function loadSettings() {
   try {
     const raw = localStorage.getItem(LS_SETTINGS);
-    if (!raw) return { businessName: '', businessAddress: '', businessPhone: '', footerNote: '', contentWidth: '50' };
+    if (!raw) return Object.assign({}, DEFAULT_SETTINGS);
     const parsed = JSON.parse(raw);
-    return Object.assign({ businessName: '', businessAddress: '', businessPhone: '', footerNote: '', contentWidth: '50' }, parsed);
+    return Object.assign({}, DEFAULT_SETTINGS, parsed);
   } catch (e) {
     console.error('Gagal memuat pengaturan:', e);
-    return { businessName: '', businessAddress: '', businessPhone: '', footerNote: '', contentWidth: '50' };
+    return Object.assign({}, DEFAULT_SETTINGS);
   }
 }
 
@@ -173,7 +183,9 @@ function getSettingsFromForm() {
     businessAddress: document.getElementById('setBusinessAddress').value.trim(),
     businessPhone: document.getElementById('setBusinessPhone').value.trim(),
     footerNote: document.getElementById('setFooterNote').value.trim(),
-    contentWidth: document.getElementById('setContentWidth').value
+    contentWidth: document.getElementById('setContentWidth').value,
+    printOffset: document.getElementById('setPrintOffset').value,
+    orientation: document.getElementById('setOrientation').value
   };
 }
 
@@ -183,11 +195,37 @@ function applySettingsToForm(settings) {
   document.getElementById('setBusinessPhone').value = settings.businessPhone || '';
   document.getElementById('setFooterNote').value = settings.footerNote || '';
   document.getElementById('setContentWidth').value = settings.contentWidth || '50';
+  document.getElementById('setPrintOffset').value = settings.printOffset || '0';
+  document.getElementById('setOrientation').value = settings.orientation || 'portrait';
   applyContentWidth(settings.contentWidth || '50');
+  applyPrintOffset(settings.printOffset || '0');
+  applyPrintOrientation(settings.orientation || 'portrait');
 }
 
 function applyContentWidth(mm) {
   document.documentElement.style.setProperty('--content-width', mm + 'mm');
+}
+
+/** Menggeser posisi horizontal hasil cetak (mm) untuk kalibrasi printer. */
+function applyPrintOffset(mm) {
+  document.documentElement.style.setProperty('--print-offset-x', mm + 'mm');
+}
+
+/**
+ * Menyisipkan/memperbarui aturan @page khusus cetak sesuai orientasi.
+ * @page tidak bisa memakai CSS custom property secara andal di semua
+ * browser, jadi ditulis ulang lewat <style> yang disisipkan setelah
+ * styles.css agar menimpa aturan @page default (portrait) di sana.
+ */
+function applyPrintOrientation(orientation) {
+  let styleEl = document.getElementById('dynamicPrintPageStyle');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'dynamicPrintPageStyle';
+    document.head.appendChild(styleEl);
+  }
+  const sizeValue = orientation === 'landscape' ? '58mm auto landscape' : '58mm auto';
+  styleEl.textContent = '@media print { @page { size: ' + sizeValue + '; margin: 0; } }';
 }
 
 /* ---------------------------------------------------------
@@ -545,6 +583,87 @@ function renderPreview() {
 }
 
 /* ---------------------------------------------------------
+   10b. TEKS POLOS UNTUK BAGIKAN (WHATSAPP, DLL)
+   --------------------------------------------------------- */
+
+const PLAIN_SEP = '------------------------------';
+
+/** Membangun versi teks polos dari dokumen saat ini, untuk dibagikan lewat WhatsApp. */
+function buildReceiptPlainText() {
+  const settings = getSettingsFromForm();
+  const type = state.docType;
+  const lines = [];
+
+  if (settings.businessName) lines.push(settings.businessName.toUpperCase());
+  if (settings.businessAddress) lines.push(settings.businessAddress);
+  if (settings.businessPhone) lines.push(settings.businessPhone);
+  lines.push(PLAIN_SEP);
+  lines.push('*' + (DOC_LABELS[type] || '') + '*');
+  lines.push('No.      : ' + (val('docNumber') || '-'));
+  lines.push('Tanggal  : ' + formatTanggalPanjang(val('docDate')));
+  lines.push(PLAIN_SEP);
+
+  if (type === 'kwitansi') {
+    const jumlah = parseRupiah(val('kwitansiJumlah'));
+    lines.push('Terima dari : ' + (val('kwitansiDari') || '-'));
+    lines.push('Jumlah      : ' + formatRupiahFull(jumlah));
+    lines.push('(' + terbilangRupiah(jumlah) + ')');
+    lines.push('Untuk       : ' + (val('kwitansiUntuk') || '-'));
+    if (val('kwitansiPenerima')) lines.push('Diterima ol. : ' + val('kwitansiPenerima'));
+  } else if (type === 'nota' || type === 'bon') {
+    const pembeliId = type === 'nota' ? 'notaPembeli' : 'bonPelanggan';
+    const catatanId = type === 'nota' ? 'notaCatatan' : 'bonCatatan';
+    if (val(pembeliId)) lines.push('Pelanggan : ' + val(pembeliId));
+    const filledItems = state.items[type].filter(function (r) { return r.nama && r.nama.trim() !== ''; });
+    filledItems.forEach(function (row) {
+      lines.push('- ' + row.nama + ' (' + row.qty + ' x ' + formatRupiahNumber(row.harga) + ') = ' + formatRupiahFull(row.qty * row.harga));
+    });
+    if (filledItems.length === 0) lines.push('(belum ada item)');
+    lines.push(PLAIN_SEP);
+    lines.push('*TOTAL: ' + formatRupiahFull(getItemsTotal(type)) + '*');
+    if (val(catatanId)) lines.push('Catatan: ' + val(catatanId));
+  } else if (type === 'bukti-pembayaran') {
+    const jumlah = parseRupiah(val('bpJumlah'));
+    lines.push('Dibayarkan oleh   : ' + (val('bpDibayarkanOleh') || '-'));
+    lines.push('Dibayarkan kepada : ' + (val('bpDibayarkanKepada') || '-'));
+    lines.push('Jumlah            : ' + formatRupiahFull(jumlah));
+    lines.push('(' + terbilangRupiah(jumlah) + ')');
+    lines.push('Metode            : ' + (val('bpMetode') || '-'));
+    lines.push('Keperluan         : ' + (val('bpKeperluan') || '-'));
+    if (val('bpKeterangan')) lines.push('Keterangan        : ' + val('bpKeterangan'));
+  } else if (type === 'serah-terima') {
+    const jumlah = parseRupiah(val('stJumlah'));
+    lines.push('Menyerahkan : ' + (val('stMenyerahkan') || '-'));
+    lines.push('Menerima    : ' + (val('stMenerima') || '-'));
+    lines.push('Jumlah      : ' + formatRupiahFull(jumlah));
+    lines.push('(' + terbilangRupiah(jumlah) + ')');
+    lines.push('Tujuan      : ' + (val('stTujuan') || '-'));
+    if (val('stKeterangan')) lines.push('Keterangan  : ' + val('stKeterangan'));
+  }
+
+  if (settings.footerNote) {
+    lines.push(PLAIN_SEP);
+    lines.push(settings.footerNote);
+  }
+
+  return lines.join('\n');
+}
+
+/** Membuka WhatsApp (aplikasi di HP, atau WhatsApp Web di desktop) dengan teks dokumen siap kirim. */
+function handleShareWhatsApp() {
+  if (!validateForm()) {
+    showToast('Periksa kembali data yang belum lengkap.', 'error');
+    return;
+  }
+  const text = buildReceiptPlainText();
+  const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+  const win = window.open(url, '_blank', 'noopener');
+  if (!win) {
+    showToast('Pop-up diblokir browser. Izinkan pop-up untuk situs ini agar bisa membuka WhatsApp.', 'error');
+  }
+}
+
+/* ---------------------------------------------------------
    11. DRAFT (SIMPAN / MUAT)
    --------------------------------------------------------- */
 
@@ -774,6 +893,16 @@ function init() {
     saveSettings(s);
     applyContentWidth(s.contentWidth);
   });
+  document.getElementById('setPrintOffset').addEventListener('change', function () {
+    const s = getSettingsFromForm();
+    saveSettings(s);
+    applyPrintOffset(s.printOffset);
+  });
+  document.getElementById('setOrientation').addEventListener('change', function () {
+    const s = getSettingsFromForm();
+    saveSettings(s);
+    applyPrintOrientation(s.orientation);
+  });
 
   // Jenis dokumen
   document.getElementById('docType').addEventListener('change', function (e) {
@@ -821,6 +950,7 @@ function init() {
 
   // Tombol aksi utama
   document.getElementById('btnPrint').addEventListener('click', handlePrintRequest);
+  document.getElementById('btnShareWA').addEventListener('click', handleShareWhatsApp);
   document.getElementById('btnSaveDraft').addEventListener('click', handleSaveDraft);
   document.getElementById('btnClear').addEventListener('click', handleClearForm);
 

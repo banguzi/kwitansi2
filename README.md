@@ -56,8 +56,9 @@ aplikasi bisa dibuka kembali dalam kondisi offline penuh.
 ## 3. Alur Pemakaian
 
 1. Buka **⚙️ Pengaturan Usaha & Cetak** untuk mengisi nama usaha, alamat,
-   nomor telepon, catatan kaki struk, dan lebar konten cetak (48/50/52mm).
-   Data ini otomatis tersimpan di `localStorage` perangkat.
+   nomor telepon, catatan kaki struk, lebar konten cetak (48/50/52mm),
+   kalibrasi posisi cetak, dan orientasi cetak. Data ini otomatis
+   tersimpan di `localStorage` perangkat.
 2. Pilih **Jenis Dokumen** di bagian atas form.
 3. Isi field yang muncul. Field bertanda wajib akan divalidasi sebelum
    cetak.
@@ -71,9 +72,43 @@ aplikasi bisa dibuka kembali dalam kondisi offline penuh.
 7. **💾 Simpan Draft** menyimpan seluruh isian form (termasuk item nota/bon)
    ke `localStorage` dengan nama yang bisa Anda tentukan. **📂 Muat Draft**
    menampilkan daftar draft tersimpan untuk dimuat kembali atau dihapus.
-8. **🗑️ Bersihkan** mengosongkan form (dengan konfirmasi) tanpa menghapus
+8. **💬 Bagikan ke WhatsApp** memvalidasi form yang sama seperti Cetak,
+   lalu membuka WhatsApp (aplikasi di HP atau WhatsApp Web di desktop)
+   dengan teks dokumen yang sudah disusun rapi dan siap dikirim ke kontak
+   pilihan Anda — cocok untuk mengirim bukti transaksi secara digital
+   selain/tanpa mencetak fisik.
+9. **🗑️ Bersihkan** mengosongkan form (dengan konfirmasi) tanpa menghapus
    pengaturan usaha maupun draft tersimpan. Form **tidak** otomatis
    terhapus setelah mencetak.
+
+### 3.1 Mengatasi Hasil Cetak Mepet ke Salah Satu Sisi
+
+Beberapa printer/driver melaporkan lebar kertas yang sedikit berbeda dari
+58mm nominal, sehingga struk bisa tercetak mepet ke kiri atau kanan.
+Aplikasi ini sudah memusatkan konten secara otomatis, namun jika hasil
+cetak fisik Anda masih miring ke satu sisi:
+
+1. Buka **⚙️ Pengaturan Usaha & Cetak > Kalibrasi Posisi Cetak**.
+2. Jika struk mepet ke **kiri**, pilih opsi **"Geser ke kanan"** (mulai
+   dari 1mm), lalu cetak ulang selembar untuk melihat hasilnya.
+3. Jika struk mepet ke **kanan**, pilih opsi **"Geser ke kiri"**.
+4. Ulangi dengan nilai berbeda (1–3mm) sampai hasil cetak fisik terlihat
+   center. Nilai ini tersimpan otomatis dan berlaku untuk semua cetakan
+   berikutnya di perangkat ini.
+
+Jika setelah kalibrasi hasil masih belum rapi, coba juga turunkan **Lebar
+Konten Cetak** ke 48mm — beberapa printer 58mm murah punya area cetak
+efektif yang lebih sempit dari 58mm penuh.
+
+### 3.2 Orientasi Cetak (Portrait / Landscape)
+
+Hampir semua printer thermal 58mm mencetak dalam **Portrait** (bawaan
+aplikasi ini). Opsi **Landscape** di Pengaturan disediakan khusus untuk
+kasus tertentu di mana driver/print service (terutama sebagian print
+service generik di Android) memaksa orientasi Landscape agar mau
+mengeluarkan kertas — biasanya ditandai hasil cetak yang aneh/kepotong
+saat memakai Portrait. Jika printer Anda mencetak normal di Portrait,
+**biarkan pengaturan ini apa adanya** dan jangan diubah ke Landscape.
 
 Data transaksi hanya tersimpan permanen jika Anda menekan **Simpan Draft**.
 Selain itu, data hanya ada sementara di memori browser selama halaman
@@ -271,6 +306,25 @@ browser.
       berbayang (bayangan kartu, tombol, dsb tidak ikut tercetak).
 - [ ] Font yang tercetak adalah monospace (huruf-huruf sejajar rapi,
       bukan proporsional).
+- [ ] Uji kalibrasi: ubah **Kalibrasi Posisi Cetak** ke beberapa nilai
+      berbeda dan pastikan pratinjau cetak (Ctrl/Cmd+P) bergeser sesuai
+      arah yang dipilih.
+- [ ] Uji orientasi: ubah **Orientasi Cetak** ke Landscape, buka Print
+      Preview, lalu kembalikan ke Portrait — pastikan tidak ada error di
+      console dan @page berubah sesuai pilihan (cek di DevTools atau
+      hasil cetak fisik bila printer mendukung).
+
+### 9.2b Pengujian Bagikan ke WhatsApp
+
+- [ ] Menekan **Bagikan ke WhatsApp** dengan field wajib kosong
+      menampilkan pesan validasi yang sama seperti tombol Cetak, dan
+      tidak membuka jendela baru.
+- [ ] Dengan data lengkap, tombol ini membuka tab/aplikasi WhatsApp
+      dengan teks dokumen sudah terisi otomatis dan format rapi
+      (nominal, terbilang, dan daftar item/total untuk Nota/Bon terbaca
+      jelas).
+- [ ] Jika pop-up diblokir browser, muncul pesan yang meminta pengguna
+      mengizinkan pop-up untuk situs ini.
 
 ### 9.3 Pengujian Offline / PWA (Desktop)
 

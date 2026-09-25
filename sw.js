@@ -8,7 +8,7 @@
    agar pengguna mendapat versi terbaru.
    ========================================================= */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = 'trpwa-cache-' + CACHE_VERSION;
 
 const ASSETS = [

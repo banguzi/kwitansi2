@@ -16,6 +16,7 @@
   --color-success: #16a34a;
   --radius: 10px;
   --content-width: 50mm;
+  --print-offset-x: 0mm;
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "Courier New", Courier, monospace;
 }
@@ -405,6 +406,10 @@ dialog h2 { margin-top: 0; font-size: 1.05rem; }
    ========================================================= */
 
 @media print {
+  /* Aturan @page dasar (portrait). Saat orientasi diganti ke Landscape di
+     Pengaturan, app.js menyisipkan <style> baru dengan @page yang lebih
+     spesifik untuk menimpa aturan ini — lihat applyPrintOrientation() di
+     app.js. */
   @page {
     size: 58mm auto;
     margin: 0;
@@ -423,7 +428,14 @@ dialog h2 { margin-top: 0; font-size: 1.05rem; }
   #receipt-preview {
     position: absolute;
     top: 0;
-    left: 0;
+    /* Dipusatkan secara horizontal terhadap lebar kertas yang sesungguhnya
+       dilaporkan driver/printer (bukan diasumsikan 0 dari kiri), lalu
+       digeser sesuai --print-offset-x bila pengguna melakukan kalibrasi
+       manual di Pengaturan. Ini memperbaiki hasil cetak yang mepet ke
+       pinggir kiri pada printer yang lebar kertas aktualnya tidak persis
+       sama dengan lebar konten yang dipilih. */
+    left: 50%;
+    transform: translateX(calc(-50% + var(--print-offset-x, 0mm)));
     width: var(--content-width);
     margin: 0;
     padding: 2mm 0;
