@@ -1,0 +1,28 @@
+{
+  "name": "Kwitansi Thermal 58mm",
+  "short_name": "Kwitansi 58mm",
+  "description": "Buat dan cetak Kwitansi, Nota, Bon, Bukti Pembayaran, dan Bukti Serah Terima Uang pada printer thermal 58mm. Berjalan sepenuhnya offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827",
+  "lang": "id",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

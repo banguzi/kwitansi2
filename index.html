@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kwitansi Thermal 58mm</title>
+<meta name="description" content="Aplikasi offline untuk membuat dan mencetak Kwitansi, Nota, Bon, Bukti Pembayaran, dan Bukti Serah Terima Uang pada printer thermal 58mm.">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="app-header-title">
+      <h1>🧾 Kwitansi Thermal 58mm</h1>
+      <p class="app-subtitle">Buat &amp; cetak dokumen keuangan langsung dari browser — offline, tanpa server.</p>
+    </div>
+    <span id="onlineStatus" class="status-badge">Memuat…</span>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ============ PANEL FORM ============ -->
+    <section class="panel form-panel" aria-label="Form Dokumen">
+
+      <div class="field-group">
+        <label for="docType">Jenis Dokumen</label>
+        <select id="docType" name="docType">
+          <option value="kwitansi">Kwitansi</option>
+          <option value="nota">Nota</option>
+          <option value="bon">Bon</option>
+          <option value="bukti-pembayaran">Bukti Pembayaran</option>
+          <option value="serah-terima">Bukti Serah Terima Uang</option>
+        </select>
+      </div>
+
+      <details class="settings-panel">
+        <summary>⚙️ Pengaturan Usaha &amp; Cetak</summary>
+        <div class="settings-body">
+          <div class="field-group">
+            <label for="setBusinessName">Nama Usaha / Toko</label>
+            <input type="text" id="setBusinessName" placeholder="Contoh: Toko Berkah Jaya">
+          </div>
+          <div class="field-group">
+            <label for="setBusinessAddress">Alamat</label>
+            <textarea id="setBusinessAddress" rows="2" placeholder="Contoh: Jl. Merdeka No. 10, Surabaya"></textarea>
+          </div>
+          <div class="field-group">
+            <label for="setBusinessPhone">No. Telepon / WA</label>
+            <input type="text" id="setBusinessPhone" placeholder="Contoh: 0812-3456-7890">
+          </div>
+          <div class="field-group">
+            <label for="setFooterNote">Catatan Kaki Struk</label>
+            <input type="text" id="setFooterNote" placeholder="Contoh: Terima kasih atas kepercayaan Anda">
+          </div>
+          <div class="field-group">
+            <label for="setContentWidth">Lebar Konten Cetak</label>
+            <select id="setContentWidth">
+              <option value="48">48 mm (aman untuk semua printer 58mm)</option>
+              <option value="50" selected>50 mm (standar)</option>
+              <option value="52">52 mm (maksimal, margin tipis)</option>
+            </select>
+          </div>
+          <p class="hint">Pengaturan ini disimpan otomatis di perangkat ini (localStorage) dan dipakai untuk semua dokumen.</p>
+        </div>
+      </details>
+
+      <form id="receiptForm" novalidate>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="docNumber">Nomor Dokumen</label>
+            <div class="input-with-button">
+              <input type="text" id="docNumber" name="docNumber" placeholder="Contoh: KWT/20260926/001">
+              <button type="button" id="btnAutoNumber" class="btn-small">Otomatis</button>
+            </div>
+            <p class="field-error" data-error-for="docNumber"></p>
+          </div>
+          <div class="field-group">
+            <label for="docDate">Tanggal</label>
+            <input type="date" id="docDate" name="docDate">
+            <p class="field-error" data-error-for="docDate"></p>
+          </div>
+        </div>
+
+        <!-- ===== KWITANSI ===== -->
+        <fieldset class="type-fields" data-for="kwitansi">
+          <legend>Detail Kwitansi</legend>
+          <div class="field-group">
+            <label for="kwitansiDari">Sudah Terima Dari</label>
+            <input type="text" id="kwitansiDari" name="kwitansiDari" placeholder="Nama pembayar">
+            <p class="field-error" data-error-for="kwitansiDari"></p>
+          </div>
+          <div class="field-group">
+            <label for="kwitansiJumlah">Jumlah Uang (Rp)</label>
+            <input type="text" inputmode="numeric" class="money-input" id="kwitansiJumlah" name="kwitansiJumlah" placeholder="0">
+            <p class="terbilang-preview" data-terbilang-for="kwitansiJumlah"></p>
+            <p class="field-error" data-error-for="kwitansiJumlah"></p>
+          </div>
+          <div class="field-group">
+            <label for="kwitansiUntuk">Untuk Pembayaran</label>
+            <textarea id="kwitansiUntuk" name="kwitansiUntuk" rows="2" placeholder="Contoh: Pembayaran sewa toko bulan September 2026"></textarea>
+            <p class="field-error" data-error-for="kwitansiUntuk"></p>
+          </div>
+          <div class="field-group">
+            <label for="kwitansiPenerima">Diterima Oleh (Nama)</label>
+            <input type="text" id="kwitansiPenerima" name="kwitansiPenerima" placeholder="Nama penerima uang">
+          </div>
+        </fieldset>
+
+        <!-- ===== NOTA ===== -->
+        <fieldset class="type-fields" data-for="nota">
+          <legend>Detail Nota</legend>
+          <div class="field-group">
+            <label for="notaPembeli">Nama Pembeli (opsional)</label>
+            <input type="text" id="notaPembeli" name="notaPembeli">
+          </div>
+          <div class="items-editor">
+            <table class="items-table">
+              <thead>
+                <tr><th>Nama Barang</th><th>Qty</th><th>Harga Satuan</th><th>Subtotal</th><th></th></tr>
+              </thead>
+              <tbody id="notaItemsBody"></tbody>
+            </table>
+            <button type="button" class="btn-small" data-add-item="nota">+ Tambah Item</button>
+            <p class="field-error" data-error-for="notaItems"></p>
+          </div>
+          <div class="field-group">
+            <label for="notaCatatan">Catatan</label>
+            <textarea id="notaCatatan" name="notaCatatan" rows="2"></textarea>
+          </div>
+        </fieldset>
+
+        <!-- ===== BON ===== -->
+        <fieldset class="type-fields" data-for="bon">
+          <legend>Detail Bon</legend>
+          <div class="field-group">
+            <label for="bonPelanggan">Nama Pelanggan</label>
+            <input type="text" id="bonPelanggan" name="bonPelanggan">
+          </div>
+          <div class="items-editor">
+            <table class="items-table">
+              <thead>
+                <tr><th>Nama Barang</th><th>Qty</th><th>Harga Satuan</th><th>Subtotal</th><th></th></tr>
+              </thead>
+              <tbody id="bonItemsBody"></tbody>
+            </table>
+            <button type="button" class="btn-small" data-add-item="bon">+ Tambah Item</button>
+            <p class="field-error" data-error-for="bonItems"></p>
+          </div>
+          <div class="field-group">
+            <label for="bonCatatan">Catatan</label>
+            <textarea id="bonCatatan" name="bonCatatan" rows="2" placeholder="Contoh: Bon sementara, harap dilunasi sebelum akhir bulan"></textarea>
+          </div>
+        </fieldset>
+
+        <!-- ===== BUKTI PEMBAYARAN ===== -->
+        <fieldset class="type-fields" data-for="bukti-pembayaran">
+          <legend>Detail Bukti Pembayaran</legend>
+          <div class="field-group">
+            <label for="bpDibayarkanOleh">Dibayarkan Oleh</label>
+            <input type="text" id="bpDibayarkanOleh" name="bpDibayarkanOleh">
+            <p class="field-error" data-error-for="bpDibayarkanOleh"></p>
+          </div>
+          <div class="field-group">
+            <label for="bpDibayarkanKepada">Dibayarkan Kepada</label>
+            <input type="text" id="bpDibayarkanKepada" name="bpDibayarkanKepada">
+            <p class="field-error" data-error-for="bpDibayarkanKepada"></p>
+          </div>
+          <div class="field-group">
+            <label for="bpJumlah">Jumlah Dibayar (Rp)</label>
+            <input type="text" inputmode="numeric" class="money-input" id="bpJumlah" name="bpJumlah" placeholder="0">
+            <p class="terbilang-preview" data-terbilang-for="bpJumlah"></p>
+            <p class="field-error" data-error-for="bpJumlah"></p>
+          </div>
+          <div class="field-group">
+            <label for="bpMetode">Metode Pembayaran</label>
+            <select id="bpMetode" name="bpMetode">
+              <option value="Tunai">Tunai</option>
+              <option value="Transfer Bank">Transfer Bank</option>
+              <option value="QRIS">QRIS</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="bpKeperluan">Untuk Keperluan</label>
+            <textarea id="bpKeperluan" name="bpKeperluan" rows="2"></textarea>
+            <p class="field-error" data-error-for="bpKeperluan"></p>
+          </div>
+          <div class="field-group">
+            <label for="bpKeterangan">Keterangan Tambahan</label>
+            <textarea id="bpKeterangan" name="bpKeterangan" rows="2"></textarea>
+          </div>
+        </fieldset>
+
+        <!-- ===== SERAH TERIMA ===== -->
+        <fieldset class="type-fields" data-for="serah-terima">
+          <legend>Detail Bukti Serah Terima Uang</legend>
+          <div class="field-group">
+            <label for="stMenyerahkan">Pihak Yang Menyerahkan</label>
+            <input type="text" id="stMenyerahkan" name="stMenyerahkan">
+            <p class="field-error" data-error-for="stMenyerahkan"></p>
+          </div>
+          <div class="field-group">
+            <label for="stMenerima">Pihak Yang Menerima</label>
+            <input type="text" id="stMenerima" name="stMenerima">
+            <p class="field-error" data-error-for="stMenerima"></p>
+          </div>
+          <div class="field-group">
+            <label for="stJumlah">Jumlah Uang (Rp)</label>
+            <input type="text" inputmode="numeric" class="money-input" id="stJumlah" name="stJumlah" placeholder="0">
+            <p class="terbilang-preview" data-terbilang-for="stJumlah"></p>
+            <p class="field-error" data-error-for="stJumlah"></p>
+          </div>
+          <div class="field-group">
+            <label for="stTujuan">Tujuan / Keperluan</label>
+            <textarea id="stTujuan" name="stTujuan" rows="2"></textarea>
+            <p class="field-error" data-error-for="stTujuan"></p>
+          </div>
+          <div class="field-group">
+            <label for="stKeterangan">Keterangan Tambahan</label>
+            <textarea id="stKeterangan" name="stKeterangan" rows="2"></textarea>
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="button" id="btnPrint" class="btn-primary">🖨️ Cetak</button>
+          <button type="button" id="btnSaveDraft" class="btn-secondary">💾 Simpan Draft</button>
+          <button type="button" id="btnLoadDraft" class="btn-secondary">📂 Muat Draft</button>
+          <button type="button" id="btnClear" class="btn-danger">🗑️ Bersihkan</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ PANEL PRATINJAU ============ -->
+    <section class="panel preview-panel" aria-label="Pratinjau Cetak">
+      <h2>Pratinjau Struk (58mm)</h2>
+      <p class="hint">Tampilan ini mensimulasikan lebar kertas thermal. Hasil cetak asli mengikuti pengaturan lebar konten di atas.</p>
+      <div class="thermal-frame">
+        <div id="receipt-preview" class="receipt-58mm"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Berjalan sepenuhnya di perangkat Anda. Tidak ada data yang dikirim ke server mana pun.</p>
+  </footer>
+</div>
+
+<!-- ============ DIALOG MUAT DRAFT ============ -->
+<dialog id="draftDialog">
+  <h2>Muat Draft Tersimpan</h2>
+  <div id="draftList" class="draft-list"></div>
+  <div class="dialog-actions">
+    <button type="button" id="btnCloseDraftDialog" class="btn-secondary">Tutup</button>
+  </div>
+</dialog>
+
+<!-- ============ DIALOG PETUNJUK CETAK ============ -->
+<dialog id="printHelpDialog">
+  <h2>Petunjuk Sebelum Mencetak</h2>
+  <ol class="print-help-list">
+    <li>Pastikan printer thermal 58mm sudah terpasang sebagai <strong>printer sistem</strong> (via USB, Bluetooth yang sudah dipasangkan di pengaturan OS, atau WiFi) pada perangkat ini.</li>
+    <li>Pada kotak dialog cetak yang muncul, pilih printer thermal Anda dari daftar printer.</li>
+    <li>Pilih ukuran kertas <strong>58mm / Roll Paper 58mm</strong> jika tersedia, atau ukuran custom sesuai printer.</li>
+    <li>Atur margin ke <strong>None / Tidak Ada (0)</strong> agar hasil cetak tidak terpotong.</li>
+    <li>Nonaktifkan opsi "Header dan footer" atau "Print backgrounds" bila ada, untuk hasil cetak yang bersih.</li>
+  </ol>
+  <div class="dialog-actions">
+    <label class="checkbox-label"><input type="checkbox" id="dontShowPrintHelp"> Jangan tampilkan lagi</label>
+    <button type="button" id="btnProceedPrint" class="btn-primary">Lanjutkan Cetak</button>
+    <button type="button" id="btnCancelPrint" class="btn-secondary">Batal</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
